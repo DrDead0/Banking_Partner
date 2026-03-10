@@ -74,6 +74,7 @@ const userLoginController = async (req, res) => {
             status: "Failed"
         })
     }
+    await emailService.loginEmail(user.email, user.name)
     return res.status(201).json({
         message: "User Logged in Successfully",
         status: "Success"

@@ -25,11 +25,11 @@ transporter.verify((error, success) => {
 const sendEmail = async (to, subject, text, html) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Banking Partner" <${process.env.EMAIL_USER}>`, 
-      to, 
-      subject, 
-      text, 
-      html, 
+      from: `"Banking Partner" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+      html,
     });
 
     console.log('Message sent: %s', info.messageId);
@@ -39,12 +39,18 @@ const sendEmail = async (to, subject, text, html) => {
   }
 };
 
-async function sendRegistrationEmail(userEmail,name){
-    const subject = `Welcome to Banking Partner`
-    const text = `Hello ${name}, \n\n Thank you for Registering at the Banking partner,
-    we're excited to have you on board.! \n\n Best, Regards,\n The Banking Partner Team `
-    const html = `<p>Hello ${name},\n\n </p><p>Thank you for registering at the Banking
-    Partner. we're excited to have you on board.!</P><p>Best Regards,<br> The Banking Partner Team`
-    await sendEmail(userEmail, subject, text, html)
+async function sendRegistrationEmail(userEmail, name) {
+  const subject = `Welcome to Banking Partner`;
+  const text = `Hello ${name},\n\nThank you for registering at Banking Partner, we're excited to have you on board!\n\nBest regards,\nThe Banking Partner Team`;
+  const html = `<p>Hello ${name},</p><p>Thank you for registering at Banking Partner. We're excited to have you on board!</p><p>Best regards,<br>The Banking Partner Team</p>`;
+  await sendEmail(userEmail, subject, text, html);
 }
-module.exports = {sendRegistrationEmail};
+
+async function loginEmail(userEmail, name) {
+  const subject = `Login Alert`;
+  const text = `Hello ${name},\n\nYou have been successfully logged in to Banking Partner.\n\nIf you think you didn't log in, please contact the admin to change your password.\n\nBest regards,\nThe Banking Partner Team`;
+  const html = `<p>Hello ${name},</p><p>You have been successfully logged in to Banking Partner!</p><p>Best regards,<br>The Banking Partner Team</p>`;
+  await sendEmail(userEmail, subject, text, html);
+}
+
+module.exports = { sendRegistrationEmail, loginEmail };
