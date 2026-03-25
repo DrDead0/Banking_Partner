@@ -20,10 +20,31 @@ const ledgerSchema = new mongoose.Schema({
         required:[true,"Transaction is required for Ledger entry"],
         index:true,
         immutable:true
+    },
+    type:{
+        type:String,
+        required:[true,"Ledger Type is required"],
+        index:true,
+        enum:{
+            values:["CREDIT","DEBIT"],
+            message:"Type must be CREDIT or DEBIT"
+        }
     }
     
 })
 
+//prevent ledger modification
+function preventLedgerModification(){
+   throw new Error("Ledger entries cannot be modified");
+}
+
+
+//prevent ledger modification run when other methods are called 
+ledgerSchema.pre('findOneAndUpdate',preventLedgerModification)
+ledgerSchema.pre('updateOne',preventLedgerModification)
+ledgerSchema.pre('deleteOne',preventLedgerModification)
+ledgerSchema.pre('remove',preventLedgerModification)
+ledgerSchema.pre('deleteMany',preventLedgerModification)
 
 const ledgerModel = mongoose.model("Ledger",ledgerSchema);
 
