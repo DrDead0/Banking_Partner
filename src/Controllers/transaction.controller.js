@@ -36,29 +36,47 @@ async function createTransactionController(req,res){
 
   if(isTransactionExist){
     if(isTransactionExist.status==='COMPLETED'){
-        res.status(200).json({
+        return res.status(200).json({
             message:"Transaction Completed",
             status:"Success"
         })
     }
     if(isTransactionExist.status==='PENDING'){
-        return res.status(400).json({
+        return res.status(200).json({
             message:"Transaction is Pending",
-            status:"Failed"
+            status:"Success"
         })
     }
     if(isTransactionExist.status==='FAILED'){
-        return res.status(400).json({
+        return res.status(500).json({
             message:"Transaction is Failed",
             status:"Failed"
         })
     }
     if(isTransactionExist.status==='REVERSED'){
-        return res.status(400).json({
+        return res.status(500).json({
             message:"Transaction is Reversed",
             status:"Failed"
         })
     }
   }
+  //check if the account is active or not
+  if(fromUserAccount.status!=='ACTIVE'|| toUserAccount !=='ACTIVE'){
+    return res.status(400).json({
+        message:"Account Must Be Active",
+        status:"Failed"
+    })
+  }
+ //checking senders balance from ledger
+ 
+ const senderBalance  = await fromUserAccount.getBalance()
+ if(senderBalance<amount){
+    return res.status(400).json({
+        message:"Insufficinent Balance",
+        status:"Failed"
+    })
+ }
+
+
     
 }
