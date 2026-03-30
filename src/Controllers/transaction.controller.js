@@ -78,5 +78,25 @@ async function createTransactionController(req,res){
  }
 
 
+ const session = await mongoose.startSession();
+ try{
+    session.startTransaction();
+    const transaction = await transactionModel.create({
+        fromAccount,
+        toAccount,
+        idempotencyKey,
+        amount,
+        status:"PENDING"
+    },{ session}
+)}catch(err){
+    session.abortTransaction();
+    console.error(err);
+    return res.status(500).json({
+        message:"Transcation faliled",
+        status:"Failed"
+   })
+ }
+
+
     
 }
