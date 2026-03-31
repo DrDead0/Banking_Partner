@@ -95,8 +95,5 @@ async function createTransactionController(req,res){
         message:"Transcation faliled",
         status:"Failed"
    })
- }
-
-
-    
+ }    
 }
