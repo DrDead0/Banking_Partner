@@ -15,11 +15,24 @@ async function createTransactionController(req,res){
         })
     }
     
+    if (amount <= 0) {
+        return res.status(400).json({
+            message:"Amount must be greater than zero",
+            status:"Failed"
+        })
+    }
+
+    if (fromAccount === toAccount) {
+        return res.status(400).json({
+            message:"Cannot transfer to the same account",
+            status:"Failed"
+        })
+    }
 
     //checking if transaction exist or not
 
-   const fromUserAccount = await accountModel.findById({_id:fromAccount})
-   const toUserAccount = await accountModel.findById({_id:toAccount})
+   const fromUserAccount = await accountModel.findById(fromAccount)
+   const toUserAccount = await accountModel.findById(toAccount)
 
    if(!fromUserAccount||!toUserAccount){
     return res.status(400 ).json({
@@ -61,7 +74,7 @@ async function createTransactionController(req,res){
     }
   }
   //check if the account is active or not
-  if(fromUserAccount.status!=='ACTIVE'|| toUserAccount !=='ACTIVE'){
+  if(fromUserAccount.status!=='ACTIVE'|| toUserAccount.status!=='ACTIVE'){
     return res.status(400).json({
         message:"Account Must Be Active",
         status:"Failed"
@@ -72,27 +85,58 @@ async function createTransactionController(req,res){
  const senderBalance  = await fromUserAccount.getBalance()
  if(senderBalance<amount){
     return res.status(400).json({
-        message:"Insufficinent Balance",
+        message:"Insufficient Balance",
         status:"Failed"
     })
  }
 
  const session = await mongoose.startSession();
+ session.startTransaction();
  try{
-    session.startTransaction();
-    const transaction = await transactionModel.create({
+    // Using an array when passing session options to .create() for correct behavior
+    const [transaction] = await transactionModel.create([{
         fromAccount,
         toAccount,
         idempotencyKey,
         amount,
         status:"PENDING"
-    },{ session}
-)}catch(err){
-    session.abortTransaction();
+    }], { session });
+
+    //debiting the sender account
+    const creaditLedger = await ledgerModel.create([{
+        accountId:toAccount,
+        type:"CREDIT",
+        amount:amount,
+        transaction:transaction._id
+    }], { session });
+ 
+    const debitLedger = await ledgerModel.create([{
+        accountId:fromAccount,
+        type:"DEBIT",
+        amount:amount,
+        transaction:transaction._id
+    }], { session });
+ 
+    transaction.status = "COMPLETED";
+    await transaction.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Sending success response directly (previously missing)
+    return res.status(200).json({
+        message: "Transaction Completed Successfully",
+        status: "Success"
+    });
+
+ }catch(err){
+    await session.abortTransaction();
+    session.endSession();
     console.error(err);
     return res.status(500).json({
-        message:"Transcation faliled",
+        message:"Transaction failed",
         status:"Failed"
    })
- }    
+ }
+ 
 }
