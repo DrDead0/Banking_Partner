@@ -53,4 +53,12 @@ async function loginEmail(userEmail, name) {
   await sendEmail(userEmail, subject, text, html);
 }
 
-module.exports = { sendRegistrationEmail, loginEmail };
+async function sendTransactionEmail(userEmail, name, amount, type, transactionId){
+  const subject = `Transaction Alert: Account ${type === 'CREDIT' ? 'Credited' : 'Debited'}`;
+  const actionText = type === 'CREDIT' ? 'credited to' : 'debited from';
+  const text = `Hello ${name},\n\nAn amount of ${amount} has been ${actionText} your Banking Partner account (Transaction ID: ${transactionId}).\n\nIf you did not authorize this, please contact our support immediately.\n\nBest regards,\nThe Banking Partner Team`;
+  const html = `<p>Hello ${name},</p><p>An amount of <strong>${amount}</strong> has been <strong>${actionText}</strong> your Banking Partner account (Transaction ID: ${transactionId}).</p><p>If you did not authorize this, please contact our support immediately.</p><p>Best regards,<br>The Banking Partner Team</p>`;
+  await sendEmail(userEmail, subject, text, html);
+}
+
+module.exports = { sendRegistrationEmail, loginEmail, sendTransactionEmail };

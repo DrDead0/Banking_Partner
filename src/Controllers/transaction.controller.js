@@ -31,8 +31,8 @@ async function createTransactionController(req,res){
 
     //checking if transaction exist or not
 
-   const fromUserAccount = await accountModel.findById(fromAccount)
-   const toUserAccount = await accountModel.findById(toAccount)
+   const fromUserAccount = await accountModel.findById(fromAccount).populate("user")
+   const toUserAccount = await accountModel.findById(toAccount).populate("user")
 
    if(!fromUserAccount||!toUserAccount){
     return res.status(400 ).json({
@@ -122,6 +122,18 @@ async function createTransactionController(req,res){
 
     await session.commitTransaction();
     session.endSession();
+
+    //sending email to the users
+    try {
+        if (toUserAccount.user && toUserAccount.user.email) {
+            await mailService.sendTransactionEmail(toUserAccount.user.email, toUserAccount.user.name, amount, 'CREDIT', transaction._id);
+        }
+        if (fromUserAccount.user && fromUserAccount.user.email) {
+            await mailService.sendTransactionEmail(fromUserAccount.user.email, fromUserAccount.user.name, amount, 'DEBIT', transaction._id);
+        }
+    } catch (emailErr) {
+        console.error("Failed to send transaction emails:", emailErr);
+    }
 
     // Sending success response directly (previously missing)
     return res.status(200).json({
