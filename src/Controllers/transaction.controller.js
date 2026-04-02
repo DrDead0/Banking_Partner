@@ -77,7 +77,6 @@ async function createTransactionController(req,res){
     })
  }
 
-
  const session = await mongoose.startSession();
  try{
     session.startTransaction();
